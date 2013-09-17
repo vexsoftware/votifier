@@ -18,19 +18,21 @@
 
 package com.vexsoftware.votifier;
 
-import java.io.*;
-import java.security.KeyPair;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.*;
-import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.java.JavaPlugin;
 import com.vexsoftware.votifier.crypto.RSAIO;
 import com.vexsoftware.votifier.crypto.RSAKeygen;
 import com.vexsoftware.votifier.model.ListenerLoader;
 import com.vexsoftware.votifier.model.VoteListener;
 import com.vexsoftware.votifier.net.VoteReceiver;
+import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+import java.security.KeyPair;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The main Votifier plugin class.
@@ -160,6 +162,9 @@ public class Votifier extends JavaPlugin {
 		// Load the vote listeners.
 		listenerDirectory = cfg.getString("listener_folder");
 		listeners.addAll(ListenerLoader.load(listenerDirectory));
+
+        // Initialize and register the VoteEventListener
+        this.getServer().getPluginManager().registerEvents(new VoteEventListener(),this);
 
 		// Initialize the receiver.
 		String host = cfg.getString("host", hostAddr);
