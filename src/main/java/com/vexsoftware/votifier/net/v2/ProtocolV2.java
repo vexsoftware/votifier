@@ -76,7 +76,7 @@ public class ProtocolV2 implements Protocol {
 				throw new Exception("Vote expired. Is your system time correct?");
 			}
 			
-			return new Vote(service, jsonMessagePayload.getUsername(), jsonMessagePayload.getAddress(), jsonMessagePayload.getTimestamp());
+			return new Vote(service, jsonMessagePayload.getUsername(), jsonMessagePayload.getAddress(), Long.toString(jsonMessagePayload.getTimestamp()));
 		} finally {
 			if(reader != null) {
 				try {

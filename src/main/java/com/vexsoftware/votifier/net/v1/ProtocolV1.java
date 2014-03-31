@@ -59,7 +59,7 @@ public class ProtocolV1 implements Protocol {
 		String timeStamp = readString(block, position);
 		position += timeStamp.length() + 1;
 		
-		return new Vote(serviceName, username, address, Long.parseLong(timeStamp));
+		return new Vote(serviceName, username, address, timeStamp);
 	}
 	
 	/**

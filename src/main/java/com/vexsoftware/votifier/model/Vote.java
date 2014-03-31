@@ -33,14 +33,14 @@ public class Vote {
 	private String address;
 
 	/** The unix timeStamp of the vote. */
-	private long timeStamp;
+	private String timeStamp;
 
 	@Deprecated
 	public Vote() {
 		
 	}
 	
-	public Vote(String serviceName, String username, String address, long timeStamp) {
+	public Vote(String serviceName, String username, String address, String timeStamp) {
 		this.serviceName = serviceName;
 		this.username = username.length() <= 16 ? username : username.substring(0, 16);
 		this.address = address;
@@ -115,7 +115,7 @@ public class Vote {
 	 */
 	@Deprecated
 	public void setTimeStamp(String timeStamp) {
-		this.timeStamp = Long.parseLong(timeStamp);
+		this.timeStamp = timeStamp;
 	}
 	
 	/**
@@ -124,7 +124,7 @@ public class Vote {
 	 * @return The time stamp
 	 */
 	public String getTimeStamp() {
-		return Long.toString(timeStamp);
+		return timeStamp;
 	}
 
 }
