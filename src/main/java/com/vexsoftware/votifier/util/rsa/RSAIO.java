@@ -58,8 +58,6 @@ public class RSAIO {
 		try {
 			out = new FileOutputStream(directory + "/public.key");
 			out.write(DatatypeConverter.printBase64Binary(publicSpec.getEncoded()).getBytes());
-		} catch(Exception exception) {
-			throw exception;
 		} finally {
 			try {
 				out.close();
@@ -73,8 +71,6 @@ public class RSAIO {
 		try {
 			out = new FileOutputStream(directory + "/private.key");
 			out.write(DatatypeConverter.printBase64Binary(privateSpec.getEncoded()).getBytes());
-		} catch(Exception exception) {
-			throw exception;
 		} finally {
 			try {
 				out.close();
@@ -104,8 +100,6 @@ public class RSAIO {
 			encodedPublicKey = new byte[(int) publicKeyFile.length()];
 			in.read(encodedPublicKey);
 			encodedPublicKey = DatatypeConverter.parseBase64Binary(new String(encodedPublicKey));
-		} catch(Exception exception) {
-			throw exception;
 		} finally {
 			try {
 				in.close();
@@ -122,8 +116,6 @@ public class RSAIO {
 			encodedPrivateKey = new byte[(int) privateKeyFile.length()];
 			in.read(encodedPrivateKey);
 			encodedPrivateKey = DatatypeConverter.parseBase64Binary(new String(encodedPrivateKey));
-		} catch(Exception exception) {
-			throw exception;
 		} finally {
 			try {
 				in.close();

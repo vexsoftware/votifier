@@ -184,7 +184,7 @@ public class Votifier extends JavaPlugin {
 			voteAcceptor.start();
 
 			LOG.info("Votifier enabled.");
-		} catch (Exception ex) {
+		} catch (Exception exception) {
 			gracefulExit();
 			return;
 		}

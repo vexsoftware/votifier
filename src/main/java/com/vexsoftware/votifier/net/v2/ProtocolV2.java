@@ -77,8 +77,6 @@ public class ProtocolV2 implements Protocol {
 			}
 			
 			return new Vote(service, jsonMessagePayload.getUsername(), jsonMessagePayload.getAddress(), jsonMessagePayload.getTimestamp());
-		} catch(Exception exception) {
-			throw exception;
 		} finally {
 			if(reader != null) {
 				try {

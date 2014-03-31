@@ -42,7 +42,7 @@ public class Vote {
 	
 	public Vote(String serviceName, String username, String address, long timeStamp) {
 		this.serviceName = serviceName;
-		this.username = username;
+		this.username = username.length() <= 16 ? username : username.substring(0, 16);
 		this.address = address;
 		this.timeStamp = timeStamp;
 	}
