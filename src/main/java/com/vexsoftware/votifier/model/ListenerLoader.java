@@ -24,9 +24,8 @@ public class ListenerLoader {
 	 *            The directory
 	 */
 	@SuppressWarnings("resource")
-	public static List<VoteListener> load(String directory) {
+	public static List<VoteListener> load(File dir) {
 		List<VoteListener> listeners = new ArrayList<VoteListener>();
-		File dir = new File(directory);
 
 		// Verify configured vote listener directory exists
 		if (!dir.exists()) {

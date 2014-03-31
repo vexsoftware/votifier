@@ -1,4 +1,4 @@
-package com.vexsoftware.votifier.net.impl;
+package com.vexsoftware.votifier.net.v1;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -14,7 +14,7 @@ import com.vexsoftware.votifier.util.rsa.RSA;
 public class ProtocolV1 implements Protocol {
 
 	/**
-	 * Singleton
+	 * Singleton.
 	 */
 	public static final ProtocolV1 INSTANCE = new ProtocolV1();
 

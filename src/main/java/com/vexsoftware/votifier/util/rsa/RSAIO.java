@@ -21,6 +21,7 @@ package com.vexsoftware.votifier.util.rsa;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.net.URL;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -29,6 +30,8 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
 import javax.xml.bind.DatatypeConverter;
+
+import net.minecraft.util.org.apache.commons.io.IOUtils;
 
 /**
  * Static utility methods for saving and loading RSA key pairs.
@@ -136,6 +139,23 @@ public class RSAIO {
 		PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(encodedPrivateKey);
 		PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
 		return new KeyPair(publicKey, privateKey);
+	}
+	
+	/**
+	 * Loads an RSA public key from a URL.
+	 * 
+	 * @param url
+	 *            The URL that has the public key
+	 * @return
+	 *            The public key
+	 * @throws Exception
+	 *            If an error occurs
+	 */
+	public static PublicKey loadPublicKey(URL url) throws Exception {
+		String publicKey = new String(IOUtils.toByteArray(url), "UTF-8").replaceAll("(-+BEGIN PUBLIC KEY-+\\r?\\n|-+END PUBLIC KEY-+\\r?\\n?)", "");
+		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+		X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(DatatypeConverter.parseBase64Binary(publicKey));
+		return keyFactory.generatePublic(publicKeySpec);
 	}
 
 }

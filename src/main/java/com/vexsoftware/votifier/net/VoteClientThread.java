@@ -1,5 +1,7 @@
 package com.vexsoftware.votifier.net;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -12,7 +14,8 @@ import com.vexsoftware.votifier.Votifier;
 import com.vexsoftware.votifier.model.Vote;
 import com.vexsoftware.votifier.model.VoteListener;
 import com.vexsoftware.votifier.model.VotifierEvent;
-import com.vexsoftware.votifier.net.impl.ProtocolV1;
+import com.vexsoftware.votifier.net.v1.ProtocolV1;
+import com.vexsoftware.votifier.net.v2.ProtocolV2;
 
 /**
  * The vote client thread.
@@ -37,15 +40,29 @@ public class VoteClientThread implements Runnable {
 		InputStream inputStream = null;
 		OutputStream outputStream = null;
 		try {
-			inputStream = socket.getInputStream();
-			outputStream = socket.getOutputStream();
+			inputStream = new BufferedInputStream(socket.getInputStream());
+			outputStream = new BufferedOutputStream(socket.getOutputStream());
 
 			// Send them our version.
 			outputStream.write(("VOTIFIER " + plugin.getVersion() + "\r\n").getBytes("UTF-8"));
 			outputStream.flush();
+			
+			// Which protocol do we use?
+			inputStream.mark(1);
+			int firstByte = inputStream.read();
+			inputStream.reset();
+			
+			Protocol protocol;
+			if (firstByte == (int) '{') {
+				protocol = ProtocolV2.INSTANCE;
+			} else if (this.plugin.isOldProtocol()) {
+				protocol = ProtocolV1.INSTANCE;
+			} else {
+				throw new Exception("Unknown protocol");
+			}
 
-			// Read the vote with ProtocolV1
-			final Vote vote = ProtocolV1.INSTANCE.handleProtocol(plugin, inputStream, outputStream);
+			// Read the vote
+			final Vote vote = protocol.handleProtocol(plugin, inputStream, outputStream);
 			
 			if (plugin.isDebug()) {
 				LOG.info("Received vote record -> " + vote);
