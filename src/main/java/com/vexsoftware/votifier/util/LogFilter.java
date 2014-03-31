@@ -1,14 +1,11 @@
-package com.vexsoftware.votifier;
+package com.vexsoftware.votifier.util;
 
 import java.util.logging.*;
 
 /**
  * A custom log filter for prepending plugin identifier on all log messages.
- * 
- * @author frelling
- * 
  */
-class LogFilter implements Filter {
+public class LogFilter implements Filter {
 
 	private String prefix;
 
@@ -29,4 +26,5 @@ class LogFilter implements Filter {
 		record.setMessage(prefix + record.getMessage());
 		return true;
 	}
+	
 }

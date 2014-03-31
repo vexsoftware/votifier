@@ -20,8 +20,6 @@ package com.vexsoftware.votifier.model;
 
 /**
  * A listener for votes.
- * 
- * @author Blake Beaupain
  */
 public interface VoteListener {
 

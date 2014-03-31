@@ -20,7 +20,7 @@
         <!-- Bukkit Dependency -->
         <dependency>
             <groupId>org.bukkit</groupId>
-            <artifactId>bukkit</artifactId>
+            <artifactId>craftbukkit</artifactId>
             <version>1.7.2-R0.1</version>
             <type>jar</type>
             <scope>compile</scope>

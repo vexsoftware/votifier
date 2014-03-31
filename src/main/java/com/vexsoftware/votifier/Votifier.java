@@ -18,25 +18,26 @@
 
 package com.vexsoftware.votifier;
 
-import java.io.*;
+import java.io.File;
 import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-import com.vexsoftware.votifier.crypto.RSAIO;
-import com.vexsoftware.votifier.crypto.RSAKeygen;
+
 import com.vexsoftware.votifier.model.ListenerLoader;
 import com.vexsoftware.votifier.model.VoteListener;
-import com.vexsoftware.votifier.net.VoteReceiver;
+import com.vexsoftware.votifier.net.VoteAcceptor;
+import com.vexsoftware.votifier.util.LogFilter;
+import com.vexsoftware.votifier.util.rsa.RSAIO;
+import com.vexsoftware.votifier.util.rsa.RSAKeygen;
 
 /**
  * The main Votifier plugin class.
- * 
- * @author Blake Beaupain
- * @author Kramer Campbell
  */
 public class Votifier extends JavaPlugin {
 
@@ -46,9 +47,6 @@ public class Votifier extends JavaPlugin {
 	/** Log entry prefix */
 	private static final String logPrefix = "[Votifier] ";
 
-	/** The Votifier instance. */
-	private static Votifier instance;
-
 	/** The current Votifier version. */
 	private String version;
 
@@ -56,7 +54,7 @@ public class Votifier extends JavaPlugin {
 	private final List<VoteListener> listeners = new ArrayList<VoteListener>();
 
 	/** The vote receiver. */
-	private VoteReceiver voteReceiver;
+	private VoteAcceptor voteReceiver;
 
 	/** The RSA key pair. */
 	private KeyPair keyPair;
@@ -73,8 +71,6 @@ public class Votifier extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
-		Votifier.instance = this;
-
 		// Set the plugin version.
 		version = getDescription().getVersion();
 
@@ -86,8 +82,7 @@ public class Votifier extends JavaPlugin {
 		YamlConfiguration cfg = YamlConfiguration.loadConfiguration(config);
 		File rsaDirectory = new File(getDataFolder() + "/rsa");
 		// Replace to remove a bug with Windows paths - SmilingDevil
-		String listenerDirectory = getDataFolder().toString()
-				.replace("\\", "/") + "/listeners";
+		String listenerDirectory = getDataFolder().toString().replace("\\", "/") + "/listeners";
 
 		/*
 		 * Use IP address from server.properties as a default for
@@ -96,8 +91,9 @@ public class Votifier extends JavaPlugin {
 		 * assigned to the server.
 		 */
 		String hostAddr = Bukkit.getServer().getIp();
-		if (hostAddr == null || hostAddr.length() == 0)
+		if (hostAddr == null || hostAddr.length() == 0) {
 			hostAddr = "0.0.0.0";
+		}
 
 		/*
 		 * Create configuration file if it does not exists; otherwise, load it
@@ -165,11 +161,12 @@ public class Votifier extends JavaPlugin {
 		String host = cfg.getString("host", hostAddr);
 		int port = cfg.getInt("port", 8192);
 		debug = cfg.getBoolean("debug", false);
-		if (debug)
+		if (debug) {
 			LOG.info("DEBUG mode enabled!");
+		}
 
 		try {
-			voteReceiver = new VoteReceiver(this, host, port);
+			voteReceiver = new VoteAcceptor(this, host, port);
 			voteReceiver.start();
 
 			LOG.info("Votifier enabled.");
@@ -190,15 +187,6 @@ public class Votifier extends JavaPlugin {
 
 	private void gracefulExit() {
 		LOG.log(Level.SEVERE, "Votifier did not initialize properly!");
-	}
-
-	/**
-	 * Gets the instance.
-	 * 
-	 * @return The instance
-	 */
-	public static Votifier getInstance() {
-		return instance;
 	}
 
 	/**
@@ -224,7 +212,7 @@ public class Votifier extends JavaPlugin {
 	 * 
 	 * @return The vote receiver
 	 */
-	public VoteReceiver getVoteReceiver() {
+	public VoteAcceptor getVoteReceiver() {
 		return voteReceiver;
 	}
 

@@ -20,8 +20,6 @@ package com.vexsoftware.votifier.model;
 
 /**
  * A model for a vote.
- * 
- * @author Blake Beaupain
  */
 public class Vote {
 
@@ -34,21 +32,28 @@ public class Vote {
 	/** The address of the voter. */
 	private String address;
 
-	/** The date and time of the vote. */
-	private String timeStamp;
+	/** The unix timeStamp of the vote. */
+	private long timeStamp;
 
-	@Override
-	public String toString() {
-		return "Vote (from:" + serviceName + " username:" + username
-				+ " address:" + address + " timeStamp:" + timeStamp + ")";
+	@Deprecated
+	public Vote() {
+		
 	}
-
+	
+	public Vote(String serviceName, String username, String address, long timeStamp) {
+		this.serviceName = serviceName;
+		this.username = username;
+		this.address = address;
+		this.timeStamp = timeStamp;
+	}
+	
 	/**
 	 * Sets the serviceName.
 	 * 
 	 * @param serviceName
 	 *            The new serviceName
 	 */
+	@Deprecated
 	public void setServiceName(String serviceName) {
 		this.serviceName = serviceName;
 	}
@@ -68,6 +73,7 @@ public class Vote {
 	 * @param username
 	 *            The new username
 	 */
+	@Deprecated
 	public void setUsername(String username) {
 		this.username = username.length() <= 16 ? username : username.substring(0, 16);
 	}
@@ -87,6 +93,7 @@ public class Vote {
 	 * @param address
 	 *            The new address
 	 */
+	@Deprecated
 	public void setAddress(String address) {
 		this.address = address;
 	}
@@ -106,17 +113,18 @@ public class Vote {
 	 * @param timeStamp
 	 *            The new time stamp
 	 */
+	@Deprecated
 	public void setTimeStamp(String timeStamp) {
-		this.timeStamp = timeStamp;
+		this.timeStamp = Long.parseLong(timeStamp);
 	}
-
+	
 	/**
 	 * Gets the time stamp.
 	 * 
 	 * @return The time stamp
 	 */
 	public String getTimeStamp() {
-		return timeStamp;
+		return Long.toString(timeStamp);
 	}
 
 }
