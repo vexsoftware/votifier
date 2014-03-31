@@ -72,7 +72,7 @@ public class ProtocolV2 implements Protocol {
 				throw new Exception("Replay attempt");
 			}
 			// Check if the vote is older than 10 minutes. If so, it has expired and can no longer be redeemed
-			if (System.currentTimeMillis() - jsonMessagePayload.getTimestamp() > 10L * 60L * 1000L) { // 10 minutes
+			if ((System.currentTimeMillis() / 1000L) - jsonMessagePayload.getTimestamp() > 10L * 60L * 1000L) { // 10 minutes
 				throw new Exception("Vote expired. Is your system time correct?");
 			}
 			
