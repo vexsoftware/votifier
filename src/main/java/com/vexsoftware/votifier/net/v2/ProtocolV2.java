@@ -68,8 +68,12 @@ public class ProtocolV2 implements Protocol {
 			
 			JsonMessagePayload jsonMessagePayload = GSON.fromJson(jsonMessage.getPayload(), JsonMessagePayload.class);
 			// Check for a replay attack
-			if (replayCache.contains(jsonMessage.getSignature().trim() + "\0" + jsonMessagePayload.getTimestamp())) {
-				throw new Exception("Replay attempt");
+			String replayKey = jsonMessage.getSignature().trim() + "\0" + jsonMessagePayload.getTimestamp();
+			synchronized(replayCache) {
+				if (replayCache.contains(replayKey)) {
+					throw new Exception("Replay attempt");
+				}
+				replayCache.add(replayKey);
 			}
 			// Check if the vote is older than 10 minutes. If so, it has expired and can no longer be redeemed
 			if ((System.currentTimeMillis() / 1000L) - jsonMessagePayload.getTimestamp() > 10L * 60L * 1000L) { // 10 minutes
