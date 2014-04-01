@@ -6,9 +6,9 @@ package com.vexsoftware.votifier.net.v2;
 public class JsonMessagePayload {
 
 	/**
-	 * Vote domain.
+	 * Vote host.
 	 */
-	public String domain;
+	public String host;
 	
 	/**
 	 * Vote username.
@@ -27,10 +27,10 @@ public class JsonMessagePayload {
 	
 	/**
 	 * 
-	 * @return Vote domain.
+	 * @return Vote host.
 	 */
-	public String getDomain() {
-		return domain;
+	public String getHost() {
+		return host;
 	}
 
 	/**
