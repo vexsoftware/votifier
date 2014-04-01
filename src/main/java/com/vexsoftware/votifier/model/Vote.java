@@ -37,16 +37,16 @@ public class Vote {
 
 	@Deprecated
 	public Vote() {
-		
+
 	}
-	
+
 	public Vote(String serviceName, String username, String address, String timeStamp) {
 		this.serviceName = serviceName;
 		this.username = username.length() <= 16 ? username : username.substring(0, 16);
 		this.address = address;
 		this.timeStamp = timeStamp;
 	}
-	
+
 	/**
 	 * Sets the serviceName.
 	 * 
@@ -117,7 +117,7 @@ public class Vote {
 	public void setTimeStamp(String timeStamp) {
 		this.timeStamp = timeStamp;
 	}
-	
+
 	/**
 	 * Gets the time stamp.
 	 * 
@@ -125,6 +125,12 @@ public class Vote {
 	 */
 	public String getTimeStamp() {
 		return timeStamp;
+	}
+
+	@Override
+	public String toString() {
+		return "Vote (from:" + serviceName + " username:" + username
+				+ " address:" + address + " timeStamp:" + timeStamp + ")";
 	}
 
 }
