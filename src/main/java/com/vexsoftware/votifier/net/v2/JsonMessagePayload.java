@@ -21,6 +21,11 @@ public class JsonMessagePayload {
 	public String address;
 	
 	/**
+	 * Vote random number.
+	 */
+	private long random;
+	
+	/**
 	 * Vote unix timestamp.
 	 */
 	public long timestamp;
@@ -47,6 +52,14 @@ public class JsonMessagePayload {
 	 */
 	public String getAddress() {
 		return address;
+	}
+	
+	/**
+	 * 
+	 * @return Vote random number.
+	 */
+	public long getRandom() {
+		return random;
 	}
 
 	/**

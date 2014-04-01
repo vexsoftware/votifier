@@ -68,7 +68,7 @@ public class ProtocolV2 implements Protocol {
 			
 			JsonMessagePayload jsonMessagePayload = GSON.fromJson(jsonMessage.getPayload(), JsonMessagePayload.class);
 			// Check for a replay attack
-			String replayKey = jsonMessage.getSignature().trim() + "\0" + jsonMessagePayload.getTimestamp();
+			String replayKey = jsonMessage.getService() + "\0" + jsonMessagePayload.getRandom() + "\0" + jsonMessagePayload.getTimestamp();
 			synchronized(replayCache) {
 				if (replayCache.contains(replayKey)) {
 					throw new Exception("Replay attempt");
