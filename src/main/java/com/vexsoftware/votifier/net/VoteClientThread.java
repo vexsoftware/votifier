@@ -4,7 +4,9 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.net.Socket;
+import java.security.SecureRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,9 +23,12 @@ import com.vexsoftware.votifier.net.v2.ProtocolV2;
  * The vote client thread.
  */
 public class VoteClientThread implements Runnable {
-
+	
 	/** The logger instance. */
 	private static final Logger LOG = Logger.getLogger("Votifier");
+	
+	/** The random instance. */
+	private static final SecureRandom RANDOM = new SecureRandom();
 	
 	/** The plugin. */
 	private Votifier plugin;
@@ -43,8 +48,11 @@ public class VoteClientThread implements Runnable {
 			inputStream = new BufferedInputStream(socket.getInputStream());
 			outputStream = new BufferedOutputStream(socket.getOutputStream());
 
+			// Generate challenge
+			String challenge = new BigInteger(130, RANDOM).toString(32); // This seems pretty strong and is seeded from SecureRandom
+			
 			// Send them our version.
-			outputStream.write(("VOTIFIER " + plugin.getVersion() + "\r\n").getBytes("UTF-8"));
+			outputStream.write(("VOTIFIER " + plugin.getVersion() + " " + challenge + "\r\n").getBytes("UTF-8"));
 			outputStream.flush();
 			
 			// Which protocol do we use?
@@ -62,7 +70,7 @@ public class VoteClientThread implements Runnable {
 			}
 
 			// Read the vote
-			final Vote vote = protocol.handleProtocol(plugin, inputStream, outputStream);
+			final Vote vote = protocol.handleProtocol(plugin, inputStream, outputStream, challenge);
 			
 			if (plugin.isDebug()) {
 				LOG.info("Received vote record -> " + vote);

@@ -43,12 +43,16 @@ public class ProtocolV2 implements Protocol {
 	 *
 	 * @param plugin
 	 *           Votifier plugin
-	 * @param socket
-	 *           The receiving connection
+	 * @param in
+	 *           The receiving connection's input stream
+	 * @param out
+	 *           The receiving connection's output stream
+	 * @param challenge
+	 *           The challenge issued in this connection
 	 * @throws Exception
 	 *           If an error occurs
 	 */
-	public Vote handleProtocol(Votifier plugin, InputStream in, OutputStream out) throws Exception {
+	public Vote handleProtocol(Votifier plugin, InputStream in, OutputStream out, String challenge) throws Exception {
 		BufferedReader reader = null;
 		try {
 			reader = new BufferedReader(new InputStreamReader(in));
@@ -67,17 +71,8 @@ public class ProtocolV2 implements Protocol {
 			}
 			
 			JsonMessagePayload jsonMessagePayload = GSON.fromJson(jsonMessage.getPayload(), JsonMessagePayload.class);
-			// Check for a replay attack
-			String replayKey = jsonMessage.getService() + "\0" + jsonMessagePayload.getRandom() + "\0" + jsonMessagePayload.getTimestamp();
-			synchronized(replayCache) {
-				if (replayCache.contains(replayKey)) {
-					throw new Exception("Replay attempt");
-				}
-				replayCache.add(replayKey);
-			}
-			// Check if the vote is older than 10 minutes. If so, it has expired and can no longer be redeemed
-			if ((System.currentTimeMillis() / 1000L) - jsonMessagePayload.getTimestamp() > 10L * 60L * 1000L) { // 10 minutes
-				throw new Exception("Vote expired. Is your system time correct?");
+			if(!jsonMessagePayload.getChallenge().equals(challenge)) {
+				throw new Exception("Challenge not valid");
 			}
 			
 			return new Vote(service, jsonMessagePayload.getUsername(), jsonMessagePayload.getAddress(), Long.toString(jsonMessagePayload.getTimestamp()));

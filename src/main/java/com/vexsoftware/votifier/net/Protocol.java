@@ -16,11 +16,15 @@ public interface Protocol {
 	 *
 	 * @param plugin
 	 *           Votifier plugin
-	 * @param socket
-	 *           The receiving connection
+	 * @param in
+	 *           The receiving connection's input stream
+	 * @param out
+	 *           The receiving connection's output stream
+	 * @param challenge
+	 *           The challenge issued in this connection
 	 * @throws Exception
 	 *           If an error occurs
 	 */
-	public Vote handleProtocol(Votifier plugin, InputStream in, OutputStream out) throws Exception;
+	public Vote handleProtocol(Votifier plugin, InputStream in, OutputStream out, String challenge) throws Exception;
 	
 }

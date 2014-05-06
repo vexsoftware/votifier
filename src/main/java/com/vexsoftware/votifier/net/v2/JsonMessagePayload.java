@@ -21,9 +21,9 @@ public class JsonMessagePayload {
 	public String address;
 	
 	/**
-	 * Vote random number.
+	 * Vote challenge.
 	 */
-	private long random;
+	private String challenge;
 	
 	/**
 	 * Vote unix timestamp.
@@ -56,10 +56,10 @@ public class JsonMessagePayload {
 	
 	/**
 	 * 
-	 * @return Vote random number.
+	 * @return Vote challenge.
 	 */
-	public long getRandom() {
-		return random;
+	public String getChallenge() {
+		return challenge;
 	}
 
 	/**
