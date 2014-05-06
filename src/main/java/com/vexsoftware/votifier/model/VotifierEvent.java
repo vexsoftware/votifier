@@ -6,11 +6,9 @@ import org.bukkit.event.*;
  * {@code VotifierEvent} is a custom Bukkit event class that is sent
  * synchronously to CraftBukkit's main thread allowing other plugins to listener
  * for votes.
- * 
- * @author frelling
- * 
  */
 public class VotifierEvent extends Event {
+	
 	/**
 	 * Event listener handler list.
 	 */
@@ -48,4 +46,5 @@ public class VotifierEvent extends Event {
 	public static HandlerList getHandlerList() {
 		return handlers;
 	}
+	
 }

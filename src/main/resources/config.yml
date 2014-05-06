@@ -1,0 +1,7 @@
+host: ''
+port: 8192
+debug: false
+listener_folder: ''
+enable_old_protocol: true
+websites:
+   Minestatus: https://www.minestatus.net/votifier/key

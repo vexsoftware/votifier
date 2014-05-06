@@ -16,18 +16,17 @@
  * along with Votifier.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.vexsoftware.votifier.crypto;
+package com.vexsoftware.votifier.util.rsa;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.Signature;
 
 import javax.crypto.Cipher;
 
 /**
  * Static RSA utility methods for encrypting and decrypting blocks of
  * information.
- * 
- * @author Blake Beaupain
  */
 public class RSA {
 
@@ -38,9 +37,10 @@ public class RSA {
 	 *            The data to encrypt
 	 * @param key
 	 *            The key to encrypt with
-	 * @return The encrypted data
+	 * @return
+	 *            The encrypted data
 	 * @throws Exception
-	 *             If an error occurs
+	 *            If an error occurs
 	 */
 	public static byte[] encrypt(byte[] data, PublicKey key) throws Exception {
 		Cipher cipher = Cipher.getInstance("RSA");
@@ -55,14 +55,36 @@ public class RSA {
 	 *            The data to decrypt
 	 * @param key
 	 *            The key to decrypt with
-	 * @return The decrypted data
+	 * @return 
+	 *            The decrypted data
 	 * @throws Exception
-	 *             If an error occurs
+	 *            If an error occurs
 	 */
 	public static byte[] decrypt(byte[] data, PrivateKey key) throws Exception {
 		Cipher cipher = Cipher.getInstance("RSA");
 		cipher.init(Cipher.DECRYPT_MODE, key);
 		return cipher.doFinal(data);
+	}
+	
+	/**
+	 * Verify if the signature against the public key matches the data
+	 * 
+	 * @param data
+	 *            The data to compare against
+	 * @param signatureData
+	 *            The signature of the data
+	 * @param publicKey
+	 *            The keypair's public key used to generate the signature
+	 * @return
+	 *            If the signature against the public key matches the data
+	 * @throws Exception
+	 *            If an error occurs
+	 */
+	public static boolean verify(byte[] data, byte[] signatureData, PublicKey publicKey) throws Exception {
+		Signature signature = Signature.getInstance("SHA256withRSA");
+		signature.initVerify(publicKey);
+		signature.update(data);
+		return signature.verify(signatureData);
 	}
 
 }

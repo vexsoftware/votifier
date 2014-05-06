@@ -16,7 +16,7 @@
  * along with Votifier.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.vexsoftware.votifier.crypto;
+package com.vexsoftware.votifier.util.rsa;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -25,8 +25,6 @@ import java.util.logging.Logger;
 
 /**
  * An RSA key pair generator.
- * 
- * @author Blake Beaupain
  */
 public class RSAKeygen {
 
@@ -43,8 +41,7 @@ public class RSAKeygen {
 	public static KeyPair generate(int bits) throws Exception {
 		LOG.info("Votifier is generating an RSA key pair...");
 		KeyPairGenerator keygen = KeyPairGenerator.getInstance("RSA");
-		RSAKeyGenParameterSpec spec = new RSAKeyGenParameterSpec(bits,
-				RSAKeyGenParameterSpec.F4);
+		RSAKeyGenParameterSpec spec = new RSAKeyGenParameterSpec(bits, RSAKeyGenParameterSpec.F4);
 		keygen.initialize(spec);
 		return keygen.generateKeyPair();
 	}

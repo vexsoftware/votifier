@@ -18,25 +18,31 @@
 
 package com.vexsoftware.votifier;
 
-import java.io.*;
+import java.io.File;
+import java.net.URL;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.logging.*;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-import com.vexsoftware.votifier.crypto.RSAIO;
-import com.vexsoftware.votifier.crypto.RSAKeygen;
+
 import com.vexsoftware.votifier.model.ListenerLoader;
 import com.vexsoftware.votifier.model.VoteListener;
-import com.vexsoftware.votifier.net.VoteReceiver;
+import com.vexsoftware.votifier.net.VoteAcceptor;
+import com.vexsoftware.votifier.util.LogFilter;
+import com.vexsoftware.votifier.util.rsa.RSAIO;
+import com.vexsoftware.votifier.util.rsa.RSAKeygen;
 
 /**
  * The main Votifier plugin class.
- * 
- * @author Blake Beaupain
- * @author Kramer Campbell
  */
 public class Votifier extends JavaPlugin {
 
@@ -46,23 +52,26 @@ public class Votifier extends JavaPlugin {
 	/** Log entry prefix */
 	private static final String logPrefix = "[Votifier] ";
 
-	/** The Votifier instance. */
-	private static Votifier instance;
-
 	/** The current Votifier version. */
 	private String version;
 
 	/** The vote listeners. */
-	private final List<VoteListener> listeners = new ArrayList<VoteListener>();
+	private List<VoteListener> listeners = new ArrayList<VoteListener>();
+	
+	/** The websites mapped to their public key. */
+	private Map<String, PublicKey> websites = new HashMap<String, PublicKey>();
 
 	/** The vote receiver. */
-	private VoteReceiver voteReceiver;
+	private VoteAcceptor voteAcceptor;
 
 	/** The RSA key pair. */
 	private KeyPair keyPair;
 
 	/** Debug mode flag */
 	private boolean debug;
+	
+	/** Old protocol flag */
+	private boolean oldProtocol;
 
 	/**
 	 * Attach custom log filter to logger.
@@ -70,11 +79,47 @@ public class Votifier extends JavaPlugin {
 	static {
 		LOG.setFilter(new LogFilter(logPrefix));
 	}
+	
+	@Override
+	public void onLoad() {
+		FileConfiguration config = super.getConfig();
+		
+		if (!new File(getDataFolder() + "/config.yml").exists()) {
+			LOG.info("Configuring Votifier for the first time...");
+			LOG.info("------------------------------------------------------------------------------");
+			LOG.info("Assigning Votifier to listen on port 8192. If you are hosting Craftbukkit on a");
+			LOG.info("shared server please check with your hosting provider to verify that this port");
+			LOG.info("is available for your use. Chances are that your hosting provider will assign");
+			LOG.info("a different port, which you need to specify in config.yml");
+			LOG.info("------------------------------------------------------------------------------");
+			
+			/*
+			 * Use IP address from server.properties as a default for
+			 * configurations. Do not use InetAddress.getLocalHost() as it most
+			 * likely will return the main server address instead of the address
+			 * assigned to the server.
+			 */
+			String hostAddr = Bukkit.getServer().getIp();
+			if (hostAddr == null || hostAddr.length() == 0) {
+				hostAddr = "0.0.0.0";
+			}
+			config.set("host", hostAddr);
+			
+			// Replace to remove a bug with Windows paths - SmilingDevil
+			config.set("listener_folder", getDataFolder().toString().replace("\\", "/") + "/listeners");
+		}
+		
+		if (config.contains("websites")) {
+			return;
+		}
+		
+		config.options().copyDefaults(true);
+		saveConfig();
+		reloadConfig();
+	}
 
 	@Override
 	public void onEnable() {
-		Votifier.instance = this;
-
 		// Set the plugin version.
 		version = getDescription().getVersion();
 
@@ -82,60 +127,10 @@ public class Votifier extends JavaPlugin {
 		if (!getDataFolder().exists()) {
 			getDataFolder().mkdir();
 		}
-		File config = new File(getDataFolder() + "/config.yml");
-		YamlConfiguration cfg = YamlConfiguration.loadConfiguration(config);
+		FileConfiguration config = super.getConfig();
 		File rsaDirectory = new File(getDataFolder() + "/rsa");
-		// Replace to remove a bug with Windows paths - SmilingDevil
-		String listenerDirectory = getDataFolder().toString()
-				.replace("\\", "/") + "/listeners";
-
-		/*
-		 * Use IP address from server.properties as a default for
-		 * configurations. Do not use InetAddress.getLocalHost() as it most
-		 * likely will return the main server address instead of the address
-		 * assigned to the server.
-		 */
-		String hostAddr = Bukkit.getServer().getIp();
-		if (hostAddr == null || hostAddr.length() == 0)
-			hostAddr = "0.0.0.0";
-
-		/*
-		 * Create configuration file if it does not exists; otherwise, load it
-		 */
-		if (!config.exists()) {
-			try {
-				// First time run - do some initialization.
-				LOG.info("Configuring Votifier for the first time...");
-
-				// Initialize the configuration file.
-				config.createNewFile();
-
-				cfg.set("host", hostAddr);
-				cfg.set("port", 8192);
-				cfg.set("debug", false);
-
-				/*
-				 * Remind hosted server admins to be sure they have the right
-				 * port number.
-				 */
-				LOG.info("------------------------------------------------------------------------------");
-				LOG.info("Assigning Votifier to listen on port 8192. If you are hosting Craftbukkit on a");
-				LOG.info("shared server please check with your hosting provider to verify that this port");
-				LOG.info("is available for your use. Chances are that your hosting provider will assign");
-				LOG.info("a different port, which you need to specify in config.yml");
-				LOG.info("------------------------------------------------------------------------------");
-
-				cfg.set("listener_folder", listenerDirectory);
-				cfg.save(config);
-			} catch (Exception ex) {
-				LOG.log(Level.SEVERE, "Error creating configuration file", ex);
-				gracefulExit();
-				return;
-			}
-		} else {
-			// Load configuration.
-			cfg = YamlConfiguration.loadConfiguration(config);
-		}
+		File listenerDirectory = new File(config.getString("listener_folder"));
+		listenerDirectory.mkdir();
 
 		/*
 		 * Create RSA directory and keys if it does not exist; otherwise, read
@@ -144,36 +139,52 @@ public class Votifier extends JavaPlugin {
 		try {
 			if (!rsaDirectory.exists()) {
 				rsaDirectory.mkdir();
-				new File(listenerDirectory).mkdir();
 				keyPair = RSAKeygen.generate(2048);
 				RSAIO.save(rsaDirectory, keyPair);
 			} else {
 				keyPair = RSAIO.load(rsaDirectory);
 			}
-		} catch (Exception ex) {
+		} catch (Exception exception) {
 			LOG.log(Level.SEVERE,
-					"Error reading configuration file or RSA keys", ex);
+					"Error reading configuration file or RSA keys", 
+					exception);
 			gracefulExit();
 			return;
 		}
 
 		// Load the vote listeners.
-		listenerDirectory = cfg.getString("listener_folder");
 		listeners.addAll(ListenerLoader.load(listenerDirectory));
+		
+		// Load the website public keys
+		for (Entry<String, Object> website : config.getConfigurationSection("websites").getValues(false).entrySet()) {
+			try {
+				websites.put(website.getKey(), RSAIO.loadPublicKey(new URL((String) website.getValue())));
+				if (!website.getKey().startsWith("https://")) {
+					LOG.warning("You are loading a public key (" + website.getKey() + ") over a non-SSL connection. This is insecure!");
+				}
+				LOG.info("Loaded public key for website: " + website.getKey());
+			} catch (Exception exception) {
+				LOG.log(Level.WARNING,
+						"Error loading public key for website: " + website.getKey(), 
+						exception);
+			}
+		}
 
-		// Initialize the receiver.
-		String host = cfg.getString("host", hostAddr);
-		int port = cfg.getInt("port", 8192);
-		debug = cfg.getBoolean("debug", false);
-		if (debug)
+		// Initialize the acceptor.
+		String host = config.getString("host");
+		int port = config.getInt("port");
+		oldProtocol = config.getBoolean("enable_old_protocol");
+		debug = config.getBoolean("debug");
+		if (debug) {
 			LOG.info("DEBUG mode enabled!");
+		}
 
 		try {
-			voteReceiver = new VoteReceiver(this, host, port);
-			voteReceiver.start();
+			voteAcceptor = new VoteAcceptor(this, host, port);
+			voteAcceptor.start();
 
 			LOG.info("Votifier enabled.");
-		} catch (Exception ex) {
+		} catch (Exception exception) {
 			gracefulExit();
 			return;
 		}
@@ -181,24 +192,15 @@ public class Votifier extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
-		// Interrupt the vote receiver.
-		if (voteReceiver != null) {
-			voteReceiver.shutdown();
+		// Interrupt the vote acceptor.
+		if (voteAcceptor != null) {
+			voteAcceptor.shutdown();
 		}
 		LOG.info("Votifier disabled.");
 	}
 
 	private void gracefulExit() {
 		LOG.log(Level.SEVERE, "Votifier did not initialize properly!");
-	}
-
-	/**
-	 * Gets the instance.
-	 * 
-	 * @return The instance
-	 */
-	public static Votifier getInstance() {
-		return instance;
 	}
 
 	/**
@@ -218,14 +220,23 @@ public class Votifier extends JavaPlugin {
 	public List<VoteListener> getListeners() {
 		return listeners;
 	}
+	
+	/**
+	 * Gets the websites mapped to their public key
+	 * 
+	 * @return The websites
+	 */
+	public Map<String, PublicKey> getWebsites() {
+		return websites;
+	}
 
 	/**
-	 * Gets the vote receiver.
+	 * Gets the vote acceptor.
 	 * 
-	 * @return The vote receiver
+	 * @return The vote acceptor
 	 */
-	public VoteReceiver getVoteReceiver() {
-		return voteReceiver;
+	public VoteAcceptor getVoteAcceptor() {
+		return voteAcceptor;
 	}
 
 	/**
@@ -239,6 +250,10 @@ public class Votifier extends JavaPlugin {
 
 	public boolean isDebug() {
 		return debug;
+	}
+	
+	public boolean isOldProtocol() {
+		return oldProtocol;
 	}
 
 }
