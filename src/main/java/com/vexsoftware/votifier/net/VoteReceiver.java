@@ -68,7 +68,7 @@ public class VoteReceiver extends Thread {
 	 */
 	public VoteReceiver(final Votifier plugin, String host, int port)
 			throws Exception {
-		super("Votifier network thread");
+		super("Votifier I/O");
 
 		this.plugin = plugin;
 		this.host = host;
