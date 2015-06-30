@@ -68,9 +68,14 @@ public class VoteReceiver extends Thread {
 	 */
 	public VoteReceiver(final Votifier plugin, String host, int port)
 			throws Exception {
+		super("Votifier I/O");
+
 		this.plugin = plugin;
 		this.host = host;
 		this.port = port;
+
+		// Set priority low so RSA decoding wouldn't have an impact in server performance
+		setPriority(Thread.MIN_PRIORITY);
 
 		initialize();
 	}
@@ -87,7 +92,7 @@ public class VoteReceiver extends Thread {
 			LOG.log(Level.SEVERE,
 					"with hosting services and, if so, you should check with your hosting provider.",
 					ex);
-			throw new Exception(ex);
+			throw ex;
 		}
 	}
 
@@ -118,7 +123,7 @@ public class VoteReceiver extends Thread {
 				InputStream in = socket.getInputStream();
 
 				// Send them our version.
-				writer.write("VOTIFIER " + Votifier.getInstance().getVersion());
+				writer.write("VOTIFIER " + plugin.getVersion());
 				writer.newLine();
 				writer.flush();
 
@@ -127,8 +132,7 @@ public class VoteReceiver extends Thread {
 				in.read(block, 0, block.length);
 
 				// Decrypt the block.
-				block = RSA.decrypt(block, Votifier.getInstance().getKeyPair()
-						.getPrivate());
+				block = RSA.decrypt(block, plugin.getKeyPair().getPrivate());
 				int position = 0;
 
 				// Perform the opcode check.
@@ -160,8 +164,7 @@ public class VoteReceiver extends Thread {
 					LOG.info("Received vote record -> " + vote);
 
 				// Dispatch the vote to all listeners.
-				for (VoteListener listener : Votifier.getInstance()
-						.getListeners()) {
+				for (VoteListener listener : plugin.getListeners()) {
 					try {
 						listener.voteMade(vote);
 					} catch (Exception ex) {
