@@ -18,9 +18,13 @@
 
 package com.vexsoftware.votifier.crypto;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.net.URL;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -32,8 +36,6 @@ import javax.xml.bind.DatatypeConverter;
 
 /**
  * Static utility methods for saving and loading RSA key pairs.
- * 
- * @author Blake Beaupain
  */
 public class RSAIO {
 
@@ -81,21 +83,15 @@ public class RSAIO {
 	public static KeyPair load(File directory) throws Exception {
 		// Read the public key file.
 		File publicKeyFile = new File(directory + "/public.key");
-		FileInputStream in = new FileInputStream(directory + "/public.key");
-		byte[] encodedPublicKey = new byte[(int) publicKeyFile.length()];
-		in.read(encodedPublicKey);
+		byte[] encodedPublicKey = FileUtils.readFileToByteArray(publicKeyFile);
 		encodedPublicKey = DatatypeConverter.parseBase64Binary(new String(
 				encodedPublicKey));
-		in.close();
 
 		// Read the private key file.
 		File privateKeyFile = new File(directory + "/private.key");
-		in = new FileInputStream(directory + "/private.key");
-		byte[] encodedPrivateKey = new byte[(int) privateKeyFile.length()];
-		in.read(encodedPrivateKey);
+		byte[] encodedPrivateKey = FileUtils.readFileToByteArray(privateKeyFile);
 		encodedPrivateKey = DatatypeConverter.parseBase64Binary(new String(
 				encodedPrivateKey));
-		in.close();
 
 		// Instantiate and return the key pair.
 		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
