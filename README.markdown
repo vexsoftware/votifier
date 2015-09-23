@@ -33,7 +33,7 @@ Vote listeners can be compiled by including Votifier in the class path. For exam
 
 ## Encryption
 
-Votifier uses one-way RSA encryption to ensure that only a trusted toplist can tell Votifier when a vote has been made.  When it is first run, Votifier will generate a 2048 bit RSA key pair and store the keys in the `./plugins/votifier/rsa` directory.  When you link Votifier with a toplist, the toplist will ask you for your Votifier public key - this is located at `./plugins/votifier/rsa/public.key` and the toplist will use this key to encrypt vote data.  It is essential that you do not share these keys with your players, as a smart player can use the key to create a spoof packet and tell Votifier that they voted when they really didn't.
+Votifier uses one-way RSA encryption to ensure that only a trusted toplist can tell Votifier when a vote has been made.  When it is first run, Votifier will generate a 2048 bit RSA key pair (PKCS#1 v1.5) and store the keys in the `./plugins/votifier/rsa` directory.  When you link Votifier with a toplist, the toplist will ask you for your Votifier public key - this is located at `./plugins/votifier/rsa/public.key` and the toplist will use this key to encrypt vote data.  It is essential that you do not share these keys with your players, as a smart player can use the key to create a spoof packet and tell Votifier that they voted when they really didn't.
 
 ## Protocol Documentation
 
@@ -43,7 +43,7 @@ A connection is made to the Votifier server by the server list, and immediately 
 
 	"VOTIFIER <version>"
 
-Votifier then expects a 256 byte RSA encrypted block (the public key should be obtained by the Votifier user), with the following format:
+Votifier then expects a 256 byte RSA encrypted (PKCS#1 v1.5) block (the public key should be obtained by the Votifier user), with the following format:
 
 <table>
   <tr>
