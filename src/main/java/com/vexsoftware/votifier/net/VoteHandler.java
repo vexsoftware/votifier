@@ -79,7 +79,7 @@ public class VoteHandler extends Thread {
                 return;
             }
 
-            ByteBuffer data = ByteBuffer.wrap(block, 0, length); //Chop off empty data
+            ByteBuffer data = ByteBuffer.wrap(block, 0, block.length); //Chop off empty data
 
             String opcode = readString(data);
 
