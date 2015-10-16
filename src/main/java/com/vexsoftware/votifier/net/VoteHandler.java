@@ -58,6 +58,13 @@ public class VoteHandler extends Thread {
 
             length = in.read(block, 0, block.length);
 
+            if(length != block.length){
+                LOG.log(Level.WARNING,"Illegal Length packet sent. Expected: 256 Received: "+length);
+                bad(writer);
+                receiver.countBadPacket(socket.getInetAddress());
+                return;
+            }
+
             try {
                 block = RSA.decrypt(block, Votifier.getInstance().getKeyPair().getPrivate());
             } catch (BadPaddingException e) {
