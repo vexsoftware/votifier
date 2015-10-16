@@ -61,7 +61,7 @@ public class VoteHandler extends Thread {
             if(length != block.length){
                 LOG.log(Level.WARNING,"Illegal Length packet sent. Expected: 256 Received: "+length);
                 bad(writer);
-                receiver.countBadPacket(socket.getInetAddress());
+                receiver.countBadPacket(VoteReceiver.getRemoteAddress(socket));
                 return;
             }
 
@@ -70,12 +70,12 @@ public class VoteHandler extends Thread {
             } catch (BadPaddingException e) {
                 LOG.log(Level.WARNING, "RSA Exception. Make sure that your public key \n matches the one you gave on the server list.");
                 bad(writer);
-                receiver.countBadPacket(socket.getInetAddress());
+                receiver.countBadPacket(VoteReceiver.getRemoteAddress(socket));
                 return;
             } catch (NoSuchPaddingException | InvalidKeyException | NoSuchAlgorithmException | IllegalBlockSizeException e) {
                 LOG.log(Level.WARNING, "RSA Exception, ignoring packet - " + e.getLocalizedMessage());
                 bad(writer);
-                receiver.countBadPacket(socket.getInetAddress());
+                receiver.countBadPacket(VoteReceiver.getRemoteAddress(socket));
                 return;
             }
 
@@ -95,7 +95,7 @@ public class VoteHandler extends Thread {
             String timeStamp = readString(data);
 
             ok(writer);
-            receiver.badPacketCounter.remove(socket.getInetAddress());
+            receiver.badPacketCounter.remove(VoteReceiver.getRemoteAddress(socket));
 
             final Vote v = new Vote(serviceName, username, address, timeStamp);
 

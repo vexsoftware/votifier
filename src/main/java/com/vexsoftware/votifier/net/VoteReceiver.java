@@ -115,8 +115,10 @@ public class VoteReceiver extends Thread {
 			try {
 				Socket socket = server.accept();
 
+				if(socket == null) continue;
+
 				if(Votifier.getInstance().getBadPacketThreshold() != -1){
-					Integer badPackets = badPacketCounter.get(socket.getInetAddress());
+					Integer badPackets = badPacketCounter.get(getRemoteAddress(socket));
 					if(badPackets != null && badPackets >= Votifier.getInstance().getBadPacketThreshold()){
 						LOG.severe("Host that exceeded the bad host threshold and has been blocked: "+socket.getInetAddress().getHostAddress());
 						OutputStreamWriter writer = null;
@@ -138,8 +140,15 @@ public class VoteReceiver extends Thread {
 
 				new VoteHandler(socket, this).start();
 			} catch (Exception e) {
+				if(!running && e instanceof SocketException){
+					return;
+				}
 				LOG.log(Level.WARNING, "Various exception occured while processing socket - " + e.getLocalizedMessage(), e);
 			}
 		}
+	}
+
+	public static InetAddress getRemoteAddress(Socket s){
+		return ((InetSocketAddress) s.getRemoteSocketAddress()).getAddress();
 	}
 }
