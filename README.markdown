@@ -12,6 +12,9 @@ Votifier configures itself the first time it is run.
 
 If you want to customize Votifier, simply the edit `./plugins/votifier/config.yml` file.
 
+Version 2.0 introduces the `badPacketThreshold` configuration value. This is the value of consecutive bad packets that a server
+can send before the server denys further connections. If you wish to turn this feature off, set `badPacketThreshold` to `-1`.
+
 ## Writing Vote Listeners
 
 A vote listener implements the `VoteListener` interface which contains an implementation of the `voteMade` method.

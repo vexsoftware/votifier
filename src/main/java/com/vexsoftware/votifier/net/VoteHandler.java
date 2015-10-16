@@ -95,6 +95,7 @@ public class VoteHandler extends Thread {
             String timeStamp = readString(data);
 
             ok(writer);
+            receiver.badPacketCounter.remove(socket.getInetAddress());
 
             final Vote v = new Vote(serviceName, username, address, timeStamp);
 
