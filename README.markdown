@@ -85,7 +85,7 @@ Votifier then expects a 256 byte RSA encrypted block (the public key should be o
 
 The first string of value "VOTE" is an opcode check to ensure that RSA was encoded and decoded properly, if this value is wrong then Votifier assumes that there was a problem with encryption and drops the connection. `serviceName` is the name of the top list service, `username` is the username (entered by the voter) of the person who voted, `address` is the IP address of the voter, and `timeStamp` is the time stamp of the vote.  Each string is delimited by the newline character `\n` (byte value 10).  The `space` block is the empty space that is left over, **the block must be exactly 256 bytes** regardless of how much information it holds.
 ### Vote Acknowledgement Protocol
-If the version of Votifier begins with s (ex. s-2.0) then the votifier socket will send acknowledgement. If the packet
+If the version of Votifier begins with s (ex. s2.0) then the votifier socket will send acknowledgement. If the packet
 was transmitted correctly, then the server will respond with `OK\n`. Otherwise, if there was a RSA error or an error with
 transmission, the server will transmit back `BAD\n`. If the socket closed without a transmission back, it is safe to assume
 that the server is not up, or there was an error serverside. The server will always send `OK\n` before processing the vote, so
