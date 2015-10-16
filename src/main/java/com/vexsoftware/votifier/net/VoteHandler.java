@@ -149,7 +149,7 @@ public class VoteHandler extends Thread {
             byte curr = buf.get();
             if (curr == '\n')
                 break;
-            ret.append(curr);
+            ret.append((char)curr);
         }
         return ret.toString();
     }
