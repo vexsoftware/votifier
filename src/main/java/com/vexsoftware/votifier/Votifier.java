@@ -37,6 +37,7 @@ import com.vexsoftware.votifier.net.VoteReceiver;
  * 
  * @author Blake Beaupain
  * @author Kramer Campbell
+ * @author Joe Hirschfeld
  */
 public class Votifier extends JavaPlugin {
 
@@ -63,6 +64,9 @@ public class Votifier extends JavaPlugin {
 
 	/** Debug mode flag */
 	private boolean debug;
+
+	/** Bad packet threshold **/
+	private int badPacketThreshold;
 
 	/**
 	 * Attach custom log filter to logger.
@@ -113,7 +117,7 @@ public class Votifier extends JavaPlugin {
 				cfg.set("host", hostAddr);
 				cfg.set("port", 8192);
 				cfg.set("debug", false);
-
+				cfg.set("badPacketThreshold", 5);
 				/*
 				 * Remind hosted server admins to be sure they have the right
 				 * port number.
@@ -123,6 +127,14 @@ public class Votifier extends JavaPlugin {
 				LOG.info("shared server please check with your hosting provider to verify that this port");
 				LOG.info("is available for your use. Chances are that your hosting provider will assign");
 				LOG.info("a different port, which you need to specify in config.yml");
+				LOG.info("------------------------------------------------------------------------------");
+				LOG.info(""); //newline
+				LOG.info("------------------------------------------------------------------------------");
+				LOG.info("You are using a version of Votifier with a patch that includes the ability to");
+				LOG.info("defer bad hosts. After a configurable amount of bad packets with bad keys,");
+				LOG.info("will block the host from further communication. The amount of bad packets for");
+				LOG.info("the block to be triggered is configurable within the config.yml under the key");
+				LOG.info("'badPacketThreshold'. If you want this feature disabled, set it to -1.");
 				LOG.info("------------------------------------------------------------------------------");
 
 				cfg.set("listener_folder", listenerDirectory);
@@ -165,6 +177,8 @@ public class Votifier extends JavaPlugin {
 		String host = cfg.getString("host", hostAddr);
 		int port = cfg.getInt("port", 8192);
 		debug = cfg.getBoolean("debug", false);
+		badPacketThreshold = cfg.getInt("badPacketThreshold", -1);
+
 		if (debug)
 			LOG.info("DEBUG mode enabled!");
 
@@ -175,7 +189,6 @@ public class Votifier extends JavaPlugin {
 			LOG.info("Votifier enabled.");
 		} catch (Exception ex) {
 			gracefulExit();
-			return;
 		}
 	}
 
@@ -190,6 +203,7 @@ public class Votifier extends JavaPlugin {
 
 	private void gracefulExit() {
 		LOG.log(Level.SEVERE, "Votifier did not initialize properly!");
+		setEnabled(false);
 	}
 
 	/**
@@ -241,4 +255,5 @@ public class Votifier extends JavaPlugin {
 		return debug;
 	}
 
+	public int getBadPacketThreshold(){return badPacketThreshold;}
 }
