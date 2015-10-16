@@ -21,6 +21,7 @@ package com.vexsoftware.votifier.net;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.*;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.*;
 
@@ -51,7 +52,7 @@ public class VoteReceiver extends Thread {
 	/** The running flag. */
 	private boolean running = true;
 
-	public Map<InetAddress, Integer> badPacketCounter;
+	public Map<InetAddress, Integer> badPacketCounter = new HashMap<>();
 
 	public void countBadPacket(InetAddress i){
 		Integer a = badPacketCounter.get(i);
