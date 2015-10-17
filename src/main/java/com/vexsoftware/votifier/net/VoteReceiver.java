@@ -23,9 +23,11 @@ import java.io.OutputStreamWriter;
 import java.net.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.*;
 
 import com.vexsoftware.votifier.Votifier;
+import com.vexsoftware.votifier.model.Vote;
 
 /**
  * The vote receiving server.
@@ -52,13 +54,18 @@ public class VoteReceiver extends Thread {
 	/** The running flag. */
 	private boolean running = true;
 
-	public Map<InetAddress, Integer> badPacketCounter = new HashMap<>();
+	public Map<InetAddress, AtomicInteger> badPacketCounter = new HashMap<>();
 
 	public void countBadPacket(InetAddress i){
-		Integer a = badPacketCounter.get(i);
-		if(a == null) a = 1;
-		else a++;
-		badPacketCounter.put(i,a);
+		AtomicInteger a = badPacketCounter.get(i);
+		if(a == null) {
+			badPacketCounter.put(i, new AtomicInteger(1));
+		}
+		else {
+			a.incrementAndGet();
+			LOG.severe("Host that exceeded the bad host threshold and has been blocked: " + i.getHostAddress());
+			badPacketCounter.put(i,a);
+		}
 	}
 
 	/**
@@ -119,9 +126,9 @@ public class VoteReceiver extends Thread {
 				if(socket == null) continue;
 
 				if(Votifier.getInstance().getBadPacketThreshold() != -1){
-					Integer badPackets = badPacketCounter.get(getRemoteAddress(socket));
-					if(badPackets != null && badPackets >= Votifier.getInstance().getBadPacketThreshold()){
-						LOG.severe("Host that exceeded the bad host threshold and has been blocked: "+socket.getInetAddress().getHostAddress());
+					InetAddress remoteAddress = getRemoteAddress(socket);
+					AtomicInteger badPackets = badPacketCounter.get(remoteAddress);
+					if(badPackets != null && badPackets.get() >= Votifier.getInstance().getBadPacketThreshold()){
 						OutputStreamWriter writer = null;
 						try {
 							writer = new OutputStreamWriter(socket.getOutputStream());

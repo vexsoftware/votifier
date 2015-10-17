@@ -19,6 +19,7 @@
 package com.vexsoftware.votifier;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.List;

@@ -11,6 +11,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.*;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
@@ -46,6 +47,7 @@ public class VoteHandler extends Thread {
         BufferedWriter writer = null;
         InputStream in = null;
 
+        InetAddress remoteAddress = VoteReceiver.getRemoteAddress(socket);
         try {
             socket.setSoTimeout(5000);
 
@@ -61,7 +63,7 @@ public class VoteHandler extends Thread {
             if(length != block.length){
                 LOG.log(Level.WARNING,"Illegal Length packet sent. Expected: 256 Received: "+length);
                 bad(writer);
-                receiver.countBadPacket(VoteReceiver.getRemoteAddress(socket));
+                receiver.countBadPacket(remoteAddress);
                 return;
             }
 
@@ -70,12 +72,12 @@ public class VoteHandler extends Thread {
             } catch (BadPaddingException e) {
                 LOG.log(Level.WARNING, "RSA Exception. Make sure that your public key \n matches the one you gave on the server list.");
                 bad(writer);
-                receiver.countBadPacket(VoteReceiver.getRemoteAddress(socket));
+                receiver.countBadPacket(remoteAddress);
                 return;
             } catch (NoSuchPaddingException | InvalidKeyException | NoSuchAlgorithmException | IllegalBlockSizeException e) {
                 LOG.log(Level.WARNING, "RSA Exception, ignoring packet - " + e.getLocalizedMessage());
                 bad(writer);
-                receiver.countBadPacket(VoteReceiver.getRemoteAddress(socket));
+                receiver.countBadPacket(remoteAddress);
                 return;
             }
 
@@ -95,7 +97,7 @@ public class VoteHandler extends Thread {
             String timeStamp = readString(data);
 
             ok(writer);
-            receiver.badPacketCounter.remove(VoteReceiver.getRemoteAddress(socket));
+            receiver.badPacketCounter.remove(remoteAddress);
 
             final Vote v = new Vote(serviceName, username, address, timeStamp);
 
@@ -118,9 +120,11 @@ public class VoteHandler extends Thread {
                 }
             });
         } catch (SocketException e) {
-            LOG.log(Level.WARNING, "Protocol error. Ignoring packet - " + e.getLocalizedMessage());
+            LOG.log(Level.WARNING, "Protocol error. Ignoring packet - " + e.getLocalizedMessage() + " - Remote IP: "+remoteAddress.getHostAddress());
+            receiver.countBadPacket(remoteAddress);
         } catch (IOException e) {
-            LOG.log(Level.WARNING, "IO Exception, ignoring packet - " + e.getLocalizedMessage());
+            LOG.log(Level.WARNING, "IO Exception, ignoring packet - " + e.getLocalizedMessage() + " - Remote IP: " + remoteAddress.getHostAddress());
+            receiver.countBadPacket(remoteAddress);
         } catch (RuntimeException e) {
             LOG.log(Level.SEVERE, "Something unknown occured while decoding a vote packet! - " + e.getLocalizedMessage(), e);
         } finally {
