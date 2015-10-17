@@ -18,20 +18,16 @@
 
 package com.vexsoftware.votifier.net;
 
-import java.io.BufferedWriter;
-import java.io.InputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketException;
+import java.net.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.*;
-import javax.crypto.BadPaddingException;
-import org.bukkit.Bukkit;
 
 import com.vexsoftware.votifier.Votifier;
-import com.vexsoftware.votifier.crypto.RSA;
-import com.vexsoftware.votifier.model.*;
+import com.vexsoftware.votifier.model.Vote;
 
 /**
  * The vote receiving server.
@@ -57,6 +53,20 @@ public class VoteReceiver extends Thread {
 
 	/** The running flag. */
 	private boolean running = true;
+
+	public Map<InetAddress, AtomicInteger> badPacketCounter = new HashMap<>();
+
+	public void countBadPacket(InetAddress i){
+		AtomicInteger a = badPacketCounter.get(i);
+		if(a == null) {
+			badPacketCounter.put(i, new AtomicInteger(1));
+		}
+		else {
+			a.incrementAndGet();
+			LOG.severe("Host that exceeded the bad host threshold and has been blocked: " + i.getHostAddress());
+			badPacketCounter.put(i,a);
+		}
+	}
 
 	/**
 	 * Instantiates a new vote receiver.
@@ -112,111 +122,41 @@ public class VoteReceiver extends Thread {
 		while (running) {
 			try {
 				Socket socket = server.accept();
-				socket.setSoTimeout(5000); // Don't hang on slow connections.
-				BufferedWriter writer = new BufferedWriter(
-						new OutputStreamWriter(socket.getOutputStream()));
-				InputStream in = socket.getInputStream();
 
-				// Send them our version.
-				writer.write("VOTIFIER " + Votifier.getInstance().getVersion());
-				writer.newLine();
-				writer.flush();
+				if(socket == null) continue;
 
-				// Read the 256 byte block.
-				byte[] block = new byte[256];
-				in.read(block, 0, block.length);
-
-				// Decrypt the block.
-				block = RSA.decrypt(block, Votifier.getInstance().getKeyPair()
-						.getPrivate());
-				int position = 0;
-
-				// Perform the opcode check.
-				String opcode = readString(block, position);
-				position += opcode.length() + 1;
-				if (!opcode.equals("VOTE")) {
-					// Something went wrong in RSA.
-					throw new Exception("Unable to decode RSA");
-				}
-
-				// Parse the block.
-				String serviceName = readString(block, position);
-				position += serviceName.length() + 1;
-				String username = readString(block, position);
-				position += username.length() + 1;
-				String address = readString(block, position);
-				position += address.length() + 1;
-				String timeStamp = readString(block, position);
-				position += timeStamp.length() + 1;
-
-				// Create the vote.
-				final Vote vote = new Vote();
-				vote.setServiceName(serviceName);
-				vote.setUsername(username);
-				vote.setAddress(address);
-				vote.setTimeStamp(timeStamp);
-
-				if (plugin.isDebug())
-					LOG.info("Received vote record -> " + vote);
-
-				// Dispatch the vote to all listeners.
-				for (VoteListener listener : Votifier.getInstance()
-						.getListeners()) {
-					try {
-						listener.voteMade(vote);
-					} catch (Exception ex) {
-						String vlName = listener.getClass().getSimpleName();
-						LOG.log(Level.WARNING,
-								"Exception caught while sending the vote notification to the '"
-										+ vlName + "' listener", ex);
+				if(Votifier.getInstance().getBadPacketThreshold() != -1){
+					InetAddress remoteAddress = getRemoteAddress(socket);
+					AtomicInteger badPackets = badPacketCounter.get(remoteAddress);
+					if(badPackets != null && badPackets.get() >= Votifier.getInstance().getBadPacketThreshold()){
+						OutputStreamWriter writer = null;
+						try {
+							writer = new OutputStreamWriter(socket.getOutputStream());
+							VoteHandler.bad(writer);
+						} catch(IOException e){
+							LOG.log(Level.WARNING,"Failed to send bad signal through vote socket.",e);
+						}
+						finally{
+							if(writer != null){
+								writer.close();
+							}
+						}
+						socket.close();
+						continue;
 					}
 				}
 
-				// Call event in a synchronized fashion to ensure that the
-				// custom event runs in the
-				// the main server thread, not this one.
-				plugin.getServer().getScheduler()
-						.scheduleSyncDelayedTask(plugin, new Runnable() {
-							public void run() {
-								Bukkit.getServer().getPluginManager()
-										.callEvent(new VotifierEvent(vote));
-							}
-						});
-
-				// Clean up.
-				writer.close();
-				in.close();
-				socket.close();
-			} catch (SocketException ex) {
-				LOG.log(Level.WARNING, "Protocol error. Ignoring packet - "
-						+ ex.getLocalizedMessage());
-			} catch (BadPaddingException ex) {
-				LOG.log(Level.WARNING,
-						"Unable to decrypt vote record. Make sure that that your public key");
-				LOG.log(Level.WARNING,
-						"matches the one you gave the server list.", ex);
-			} catch (Exception ex) {
-				LOG.log(Level.WARNING,
-						"Exception caught while receiving a vote notification",
-						ex);
+				new VoteHandler(socket, this).start();
+			} catch (Exception e) {
+				if(!running && e instanceof SocketException){
+					return;
+				}
+				LOG.log(Level.WARNING, "Various exception occured while processing socket - " + e.getLocalizedMessage(), e);
 			}
 		}
 	}
 
-	/**
-	 * Reads a string from a block of data.
-	 * 
-	 * @param data
-	 *            The data to read from
-	 * @return The string
-	 */
-	private String readString(byte[] data, int offset) {
-		StringBuilder builder = new StringBuilder();
-		for (int i = offset; i < data.length; i++) {
-			if (data[i] == '\n')
-				break; // Delimiter reached.
-			builder.append((char) data[i]);
-		}
-		return builder.toString();
+	public static InetAddress getRemoteAddress(Socket s){
+		return ((InetSocketAddress) s.getRemoteSocketAddress()).getAddress();
 	}
 }

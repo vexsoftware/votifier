@@ -18,10 +18,15 @@
 
 package com.vexsoftware.votifier.crypto;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 /**
  * Static RSA utility methods for encrypting and decrypting blocks of
@@ -59,7 +64,7 @@ public class RSA {
 	 * @throws Exception
 	 *             If an error occurs
 	 */
-	public static byte[] decrypt(byte[] data, PrivateKey key) throws Exception {
+	public static byte[] decrypt(byte[] data, PrivateKey key) throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException, BadPaddingException, IllegalBlockSizeException {
 		Cipher cipher = Cipher.getInstance("RSA");
 		cipher.init(Cipher.DECRYPT_MODE, key);
 		return cipher.doFinal(data);
