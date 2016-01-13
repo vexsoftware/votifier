@@ -54,18 +54,18 @@ public class RSAIO {
 		// Store the public key.
 		X509EncodedKeySpec publicSpec = new X509EncodedKeySpec(
 				publicKey.getEncoded());
-		FileOutputStream out = new FileOutputStream(directory + "/public.key");
-		out.write(DatatypeConverter.printBase64Binary(publicSpec.getEncoded())
-				.getBytes());
-		out.close();
+		try (FileOutputStream out = new FileOutputStream(directory + "/public.key")) {
+			out.write(DatatypeConverter.printBase64Binary(publicSpec.getEncoded())
+					.getBytes());
+		}
 
 		// Store the private key.
 		PKCS8EncodedKeySpec privateSpec = new PKCS8EncodedKeySpec(
 				privateKey.getEncoded());
-		out = new FileOutputStream(directory + "/private.key");
-		out.write(DatatypeConverter.printBase64Binary(privateSpec.getEncoded())
-				.getBytes());
-		out.close();
+		try (FileOutputStream out = new FileOutputStream(directory + "/private.key")) {
+			out.write(DatatypeConverter.printBase64Binary(privateSpec.getEncoded())
+					.getBytes());
+		}
 	}
 
 	/**
@@ -81,21 +81,23 @@ public class RSAIO {
 	public static KeyPair load(File directory) throws Exception {
 		// Read the public key file.
 		File publicKeyFile = new File(directory + "/public.key");
-		FileInputStream in = new FileInputStream(directory + "/public.key");
-		byte[] encodedPublicKey = new byte[(int) publicKeyFile.length()];
-		in.read(encodedPublicKey);
-		encodedPublicKey = DatatypeConverter.parseBase64Binary(new String(
-				encodedPublicKey));
-		in.close();
+		byte[] encodedPublicKey;
+		try (FileInputStream in = new FileInputStream(publicKeyFile)) {
+			encodedPublicKey = new byte[(int) publicKeyFile.length()];
+			in.read(encodedPublicKey);
+			encodedPublicKey = DatatypeConverter.parseBase64Binary(new String(
+					encodedPublicKey));
+		}
 
 		// Read the private key file.
 		File privateKeyFile = new File(directory + "/private.key");
-		in = new FileInputStream(directory + "/private.key");
-		byte[] encodedPrivateKey = new byte[(int) privateKeyFile.length()];
-		in.read(encodedPrivateKey);
-		encodedPrivateKey = DatatypeConverter.parseBase64Binary(new String(
-				encodedPrivateKey));
-		in.close();
+		byte[] encodedPrivateKey;
+		try (FileInputStream in = new FileInputStream(privateKeyFile)) {
+			encodedPrivateKey = new byte[(int) privateKeyFile.length()];
+			in.read(encodedPrivateKey);
+			encodedPrivateKey = DatatypeConverter.parseBase64Binary(new String(
+					encodedPrivateKey));
+		}
 
 		// Instantiate and return the key pair.
 		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
