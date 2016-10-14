@@ -177,6 +177,13 @@ public class Votifier extends JavaPlugin {
 			gracefulExit();
 			return;
 		}
+		
+		try {
+    Metrics metrics = new Metrics(this);
+    metrics.start();
+} catch (IOException e) {
+    // Failed to submit the stats :-(
+}
 	}
 
 	@Override
