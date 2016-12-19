@@ -10,7 +10,7 @@ import org.bukkit.event.*;
  * @author frelling
  * 
  */
-public class VotifierEvent extends Event {
+public class VotifierEvent extends Event implements Cancellable {
 	/**
 	 * Event listener handler list.
 	 */
@@ -20,6 +20,8 @@ public class VotifierEvent extends Event {
 	 * Encapsulated vote record.
 	 */
 	private Vote vote;
+
+    private boolean cancel;
 
 	/**
 	 * Constructs a vote event that encapsulated the given vote record.
@@ -48,4 +50,14 @@ public class VotifierEvent extends Event {
 	public static HandlerList getHandlerList() {
 		return handlers;
 	}
+
+    @Override
+    public boolean isCancelled() {
+        return cancel;
+    }
+
+    @Override
+    public void setCancelled(boolean cancel) {
+        this.cancel = cancel;
+    }
 }

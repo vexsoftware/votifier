@@ -18,6 +18,13 @@
 
 package com.vexsoftware.votifier.net;
 
+import com.vexsoftware.votifier.Votifier;
+import com.vexsoftware.votifier.crypto.RSA;
+import com.vexsoftware.votifier.model.Vote;
+import com.vexsoftware.votifier.model.VotifierEvent;
+import org.bukkit.Bukkit;
+
+import javax.crypto.BadPaddingException;
 import java.io.BufferedWriter;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
@@ -25,13 +32,8 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.logging.*;
-import javax.crypto.BadPaddingException;
-import org.bukkit.Bukkit;
-
-import com.vexsoftware.votifier.Votifier;
-import com.vexsoftware.votifier.crypto.RSA;
-import com.vexsoftware.votifier.model.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The vote receiving server.
@@ -158,19 +160,6 @@ public class VoteReceiver extends Thread {
 
 				if (plugin.isDebug())
 					LOG.info("Received vote record -> " + vote);
-
-				// Dispatch the vote to all listeners.
-				for (VoteListener listener : Votifier.getInstance()
-						.getListeners()) {
-					try {
-						listener.voteMade(vote);
-					} catch (Exception ex) {
-						String vlName = listener.getClass().getSimpleName();
-						LOG.log(Level.WARNING,
-								"Exception caught while sending the vote notification to the '"
-										+ vlName + "' listener", ex);
-					}
-				}
 
 				// Call event in a synchronized fashion to ensure that the
 				// custom event runs in the
